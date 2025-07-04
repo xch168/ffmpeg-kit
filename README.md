@@ -241,7 +241,7 @@ distribute that library, then you are subject to pay MPEG LA licensing fees. Ref
 
 See our [CONTRIBUTING](CONTRIBUTING.md) guide.
 
-### 18. See Also
+### 18. See Also 
 
 - [FFmpeg API Documentation](https://ffmpeg.org/doxygen/4.0/index.html)
 - [FFmpeg Wiki](https://trac.ffmpeg.org/wiki/WikiStart)
