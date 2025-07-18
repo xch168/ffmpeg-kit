@@ -126,6 +126,12 @@ jobs:
             android/ffmpeg-kit-android-lib/build/outputs/aar/
             android/ffmpeg-kit-android-lib/build/libs/
             
+      - name: Check available publish tasks
+        working-directory: android
+        run: |
+          echo "Available publish tasks:"
+          ./gradlew tasks --group=publishing
+          
       - name: Publish to Maven Central
         if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_maven == 'true')
         working-directory: android
@@ -136,7 +142,17 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           echo "Publishing version $VERSION to Maven Central..."
-          ./gradlew publishReleasePublicationToMavenCentralRepository
+          # 尝试不同的发布命令
+          echo "Trying library project specific publish task..."
+          cd ffmpeg-kit-android-lib
+          ../gradlew publishReleasePublicationToMavenCentralRepository || {
+            echo "Failed with library project, trying from root..."
+            cd ..
+            ./gradlew :ffmpeg-kit-android-lib:publishReleasePublicationToMavenCentralRepository || {
+              echo "Failed with specific task, trying publish all..."
+              ./gradlew publish
+            }
+          }
           
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
