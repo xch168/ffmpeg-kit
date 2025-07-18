@@ -56,22 +56,22 @@ gpg --keyserver hkp://keyserver.ubuntu.com --send-keys KEY_ID
 
 ```bash
 # 创建标签
-git tag -a v6.0.1 -m "Release version 6.0.1"
+git tag -a v0.0.1 -m "Release version 0.0.1"
 
 # 推送标签
-git push origin v6.0.1
+git push origin v0.0.1
 ```
 
 支持的标签格式：
-- `v*.*.*` (例如: v6.0.1)
-- `android-v*.*.*` (例如: android-v6.0.1)
+- `v*.*.*` (例如: v0.0.1)
+- `android-v*.*.*` (例如: android-v0.0.1)
 
 ### 方法 2: 手动触发
 
 1. 进入 GitHub 仓库的 Actions 页面
 2. 选择 "Android Maven Central Publish" 工作流
 3. 点击 "Run workflow"
-4. 输入版本号（例如: 6.0.1）
+4. 输入版本号（例如: 0.0.1）
 5. 选择是否发布到 Maven Central
 
 ## 工作流程
@@ -99,7 +99,7 @@ git push origin v6.0.1
 
 ```gradle
 dependencies {
-    implementation 'io.github.xch168:ffmpeg-kit-android:6.0.1'
+    implementation 'io.github.xch168:ffmpeg-kit-android:0.0.1'
 }
 ```
 
