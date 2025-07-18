@@ -15,15 +15,17 @@
 
 ### 1. Maven Central 账户设置
 
-首先需要在 [Sonatype JIRA](https://issues.sonatype.org/) 注册账户并申请 GroupId `io.github.xch168`。
+首先需要在 [Central Publishing Portal](https://central.sonatype.com/) 注册账户并申请 GroupId `io.github.xch168`。
+
+> **注意**: OSSRH 服务将在 2025 年 6 月 30 日停止服务，请使用新的 Central Publishing Portal。
 
 ### 2. GitHub Secrets 配置
 
 在 GitHub 仓库的 Settings > Secrets and variables > Actions 中添加以下密钥：
 
 #### Maven Central 认证
-- `MAVEN_CENTRAL_USERNAME`: Sonatype 用户名
-- `MAVEN_CENTRAL_PASSWORD`: Sonatype 密码或令牌
+- `MAVEN_CENTRAL_USERNAME`: Central Publishing Portal 用户名
+- `MAVEN_CENTRAL_PASSWORD`: Central Publishing Portal 密码或令牌
 
 #### GPG 签名配置
 - `SIGNING_KEY`: GPG 私钥（Base64 编码或原始格式）

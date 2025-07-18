@@ -153,9 +153,9 @@ jobs:
           echo "Publishing version $VERSION to Maven Central..."
           # 尝试不同的发布任务
           echo "Trying specific module task..."
-          ./gradlew :ffmpeg-kit-android-lib:publishReleasePublicationToSonatypeRepository || {
-            echo "Failed, trying publishAllPublicationsToSonatypeRepository..."
-            ./gradlew :ffmpeg-kit-android-lib:publishAllPublicationsToSonatypeRepository || {
+          ./gradlew :ffmpeg-kit-android-lib:publishReleasePublicationToCentralRepository || {
+            echo "Failed, trying publishAllPublicationsToCentralRepository..."
+            ./gradlew :ffmpeg-kit-android-lib:publishAllPublicationsToCentralRepository || {
               echo "Failed, trying generic publish..."
               ./gradlew :ffmpeg-kit-android-lib:publish || {
                 echo "All publish attempts failed. Available tasks:"
