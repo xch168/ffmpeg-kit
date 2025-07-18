@@ -17,7 +17,7 @@
 
 首先需要在 [Central Publishing Portal](https://central.sonatype.com/) 注册账户并申请 GroupId `io.github.xch168`。
 
-> **注意**: OSSRH 服务将在 2025 年 6 月 30 日停止服务，请使用新的 Central Publishing Portal。
+> **重要**: OSSRH 服务将在 2025 年 6 月 30 日停止服务。本项目已迁移到新的 Central Publishing Portal，使用 `https://central.sonatype.com/api/v1/publisher` 作为发布端点。
 
 ### 2. GitHub Secrets 配置
 
@@ -113,6 +113,7 @@ dependencies {
 2. **签名失败**: 确认 GPG 密钥和密码是否正确
 3. **发布失败**: 检查 Maven Central 用户名和密码
 4. **NDK 问题**: 确认 NDK 版本兼容性
+5. **发布端点问题**: 本项目使用新的 Central Publishing Portal (`https://central.sonatype.com/api/v1/publisher`)，不再使用旧的 OSSRH 服务
 
 ### 日志查看
 

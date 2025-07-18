@@ -13,7 +13,7 @@ android {
         minSdk 24
         targetSdk 33
         versionCode 1
-        versionName "0.0.1"
+        versionName project.version ?: "0.0.1"
         project.archivesBaseName = "ffmpeg-kit"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -116,13 +116,49 @@ dependencies {
     testImplementation 'org.json:json:20230618'
 }
 
+// 测试发布配置的任务
+task testPublishConfig {
+    doLast {
+        println "=== 发布配置测试 ==="
+        println "Project version: ${project.version}"
+        println "Project findProperty('version'): ${project.findProperty('version')}"
+        println "System env MAVEN_CENTRAL_USERNAME: ${System.getenv('MAVEN_CENTRAL_USERNAME') ?: 'NOT SET'}"
+        println "System env MAVEN_CENTRAL_PASSWORD: ${System.getenv('MAVEN_CENTRAL_PASSWORD') ?: 'NOT SET'}"
+        println "System env SIGNING_KEY: ${System.getenv('SIGNING_KEY') ?: 'NOT SET'}"
+        println "System env SIGNING_PASSWORD: ${System.getenv('SIGNING_PASSWORD') ?: 'NOT SET'}"
+        
+        println ""
+        println "Publishing repositories:"
+        publishing.repositories.each { repo ->
+            println "  - ${repo.name}: ${repo.url}"
+        }
+        
+        println ""
+        println "Available tasks:"
+        project.tasks.each { task ->
+            if (task.name.contains('publish')) {
+                println "  - ${task.name}"
+            }
+        }
+        
+        println ""
+        println "Publishing publications:"
+        publishing.publications.each { publication ->
+            println "  - ${publication.name}: ${publication.groupId}:${publication.artifactId}:${publication.version}"
+        }
+        
+        println ""
+        println "Note: Using Central Publishing Portal (https://central.sonatype.com/api/v1/publisher)"
+    }
+}
+
 afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
                 groupId 'io.github.xch168'
                 artifactId 'ffmpeg-kit-android'
-                version project.version ?: "0.0.1"
+                version project.findProperty('version') ?: "0.0.1"
 
                 from components.release
 

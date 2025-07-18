@@ -92,6 +92,8 @@ jobs:
       - name: Set project version
         run: |
           echo "version=${VERSION}" >> android/gradle.properties
+          echo "Project version set to: ${VERSION}"
+          cat android/gradle.properties
           
       - name: Build Android Library
         working-directory: android
@@ -141,6 +143,18 @@ jobs:
           echo "All tasks in ffmpeg-kit-android-lib module:"
           ./gradlew :ffmpeg-kit-android-lib:tasks | grep -i publish || echo "No publish tasks in module"
           
+      - name: Test Publish Configuration
+        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_maven == 'true')
+        working-directory: android
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          echo "Testing publish configuration..."
+          ./gradlew testPublishConfig
+          
       - name: Publish to Maven Central
         if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_maven == 'true')
         working-directory: android
@@ -151,15 +165,30 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           echo "Publishing version $VERSION to Maven Central..."
-          # 尝试不同的发布任务
-          echo "Trying specific module task..."
-          ./gradlew :ffmpeg-kit-android-lib:publishReleasePublicationToCentralRepository || {
+          echo "Environment variables:"
+          echo "MAVEN_CENTRAL_USERNAME: ${MAVEN_CENTRAL_USERNAME:+SET}"
+          echo "MAVEN_CENTRAL_PASSWORD: ${MAVEN_CENTRAL_PASSWORD:+SET}"
+          echo "SIGNING_KEY: ${SIGNING_KEY:+SET}"
+          echo "SIGNING_PASSWORD: ${SIGNING_PASSWORD:+SET}"
+          echo ""
+          # 首先构建项目以确保所有任务都可用
+          ./gradlew assemble
+          echo ""
+          echo "Available publish tasks:"
+          ./gradlew tasks --group=publishing
+          echo ""
+          echo "All tasks containing 'publish':"
+          ./gradlew tasks --all | grep -i publish || echo "No publish tasks found"
+          echo ""
+          # 尝试发布到 Maven Central
+          echo "Attempting to publish..."
+          ./gradlew publishReleasePublicationToCentralRepository --info || {
             echo "Failed, trying publishAllPublicationsToCentralRepository..."
-            ./gradlew :ffmpeg-kit-android-lib:publishAllPublicationsToCentralRepository || {
+            ./gradlew publishAllPublicationsToCentralRepository --info || {
               echo "Failed, trying generic publish..."
-              ./gradlew :ffmpeg-kit-android-lib:publish || {
+              ./gradlew publish --info || {
                 echo "All publish attempts failed. Available tasks:"
-                ./gradlew :ffmpeg-kit-android-lib:tasks --all | grep -i publish
+                ./gradlew tasks --all | grep -i publish
                 exit 1
               }
             }
