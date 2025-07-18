@@ -65,10 +65,49 @@ android {
 task javadoc(type: Javadoc) {
     title = 'FFmpegKit'
     destinationDir = file("${projectDir}/../../docs/android/javadoc")
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    
+    // 配置源码目录
     source = android.sourceSets.main.java.srcDirs
-    configurations.implementation.setCanBeResolved(true)
-    classpath += configurations.implementation
+    
+    // 配置类路径
+    doFirst {
+        // 获取 Android bootClasspath
+        def bootClasspath = android.bootClasspath
+        if (bootClasspath && !bootClasspath.isEmpty()) {
+            classpath += project.files(bootClasspath)
+        }
+        
+        // 添加依赖项到类路径
+        configurations.implementation.setCanBeResolved(true)
+        classpath += configurations.implementation
+    }
+    
+    // 配置 javadoc 选项
+    options {
+        encoding = 'UTF-8'
+        charSet = 'UTF-8'
+        author = true
+        version = true
+        use = true
+        windowTitle = 'FFmpeg Kit Android API'
+        docTitle = 'FFmpeg Kit Android API Documentation'
+        links 'https://developer.android.com/reference/'
+        
+        // 忽略警告和错误以防止构建失败
+        addStringOption('Xdoclint:none', '-quiet')
+        addStringOption('tag', 'apiNote:a:API Note:')
+        addStringOption('tag', 'implSpec:a:Implementation Requirements:')
+        addStringOption('tag', 'implNote:a:Implementation Note:')
+    }
+    
+    // 排除内部和测试类
+    exclude '**/internal/**'
+    exclude '**/test/**'
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
+    
+    // 确保在 Android 任务之后运行
+    dependsOn 'assemble'
 }
 
 dependencies {
