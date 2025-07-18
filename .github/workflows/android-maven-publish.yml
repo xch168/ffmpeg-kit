@@ -1,0 +1,163 @@
+name: Android Maven Central Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'android-v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 6.0.1)'
+        required: true
+        type: string
+      publish_to_maven:
+        description: 'Publish to Maven Central'
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  build-and-publish:
+    name: Build and Publish Android Library
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+          
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        
+      - name: Prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libtool pkg-config curl git doxygen nasm cmake gcc gperf texinfo yasm bison autogen wget autopoint meson ninja-build ragel groff gtk-doc-tools libtasn1-bin
+          ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --uninstall "cmake;3.10.2.4988404" "cmake;3.18.1"
+          
+      - name: Upgrade meson
+        run: pip install meson --upgrade
+        
+      - name: Set up Android NDK
+        run: |
+          NDK_VERSION="r25b-linux"
+          curl -s "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}.zip" -o ndk.zip
+          unzip -q -o ndk.zip -d .ndk
+          echo "ANDROID_NDK_ROOT=$PWD/.ndk/$(ls .ndk)" >> $GITHUB_ENV
+          
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+            
+      - name: Set version from input or tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          else
+            # Extract version from tag (remove 'v' or 'android-v' prefix)
+            TAG_VERSION=${GITHUB_REF#refs/tags/}
+            VERSION=${TAG_VERSION#v}
+            VERSION=${VERSION#android-v}
+            echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          fi
+          
+      - name: Build FFmpeg Kit for Android
+        run: |
+          echo "Building FFmpeg Kit Android version: $VERSION"
+          ./android.sh --enable-android-media-codec --enable-android-zlib --disable-arm-v7a
+          
+      - name: Print build logs
+        if: always()
+        run: cat build.log
+        
+      - name: Print ffbuild logs
+        if: failure()
+        run: |
+          if [ -f ./src/ffmpeg/ffbuild/config.log ]; then
+            tail -50 ./src/ffmpeg/ffbuild/config.log
+          fi
+          
+      - name: Set project version
+        run: |
+          echo "version=${VERSION}" >> android/gradle.properties
+          
+      - name: Build Android Library
+        working-directory: android
+        run: |
+          ./gradlew clean build
+          
+      - name: Run tests
+        working-directory: android
+        run: |
+          ./gradlew test
+          
+      - name: Generate Javadoc
+        working-directory: android
+        run: |
+          ./gradlew javadoc
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-build-artifacts-${{ env.VERSION }}
+          path: |
+            android/ffmpeg-kit-android-lib/build/outputs/aar/
+            android/ffmpeg-kit-android-lib/build/libs/
+            
+      - name: Publish to Maven Central
+        if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_maven == 'true')
+        working-directory: android
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          echo "Publishing version $VERSION to Maven Central..."
+          ./gradlew publishReleasePublicationToMavenCentralRepository
+          
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: FFmpeg Kit Android ${{ env.VERSION }}
+          body: |
+            FFmpeg Kit Android Library version ${{ env.VERSION }}
+            
+            ### Changes
+            - Android AAR library built with FFmpeg Kit
+            - Published to Maven Central
+            
+            ### Maven Dependency
+            ```gradle
+            implementation 'io.github.xch168:ffmpeg-kit-android:${{ env.VERSION }}'
+            ```
+          draft: false
+          prerelease: false
+          
+      - name: Upload Release Assets
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: android/ffmpeg-kit-android-lib/build/outputs/aar/ffmpeg-kit-android-lib-release.aar
+          asset_name: ffmpeg-kit-android-${{ env.VERSION }}.aar
+          asset_content_type: application/octet-stream 
