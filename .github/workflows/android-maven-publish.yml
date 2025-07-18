@@ -129,11 +129,17 @@ jobs:
       - name: Check available publish tasks
         working-directory: android
         run: |
+          echo "Building project first to generate tasks..."
+          ./gradlew assemble
+          echo ""
           echo "Available publish tasks:"
           ./gradlew tasks --group=publishing
           echo ""
           echo "All tasks containing 'publish':"
           ./gradlew tasks --all | grep -i publish || echo "No publish tasks found"
+          echo ""
+          echo "All tasks in ffmpeg-kit-android-lib module:"
+          ./gradlew :ffmpeg-kit-android-lib:tasks | grep -i publish || echo "No publish tasks in module"
           
       - name: Publish to Maven Central
         if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_maven == 'true')
@@ -145,8 +151,19 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           echo "Publishing version $VERSION to Maven Central..."
-          # 使用正确的任务名称
-          ./gradlew :ffmpeg-kit-android-lib:publishReleasePublicationToSonatypeRepository
+          # 尝试不同的发布任务
+          echo "Trying specific module task..."
+          ./gradlew :ffmpeg-kit-android-lib:publishReleasePublicationToSonatypeRepository || {
+            echo "Failed, trying publishAllPublicationsToSonatypeRepository..."
+            ./gradlew :ffmpeg-kit-android-lib:publishAllPublicationsToSonatypeRepository || {
+              echo "Failed, trying generic publish..."
+              ./gradlew :ffmpeg-kit-android-lib:publish || {
+                echo "All publish attempts failed. Available tasks:"
+                ./gradlew :ffmpeg-kit-android-lib:tasks --all | grep -i publish
+                exit 1
+              }
+            }
+          }
           
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')

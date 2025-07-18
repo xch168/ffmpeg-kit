@@ -120,55 +120,53 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                // The coordinates of the library, being set from variables that
-                // we'll set up later
                 groupId 'io.github.xch168'
                 artifactId 'ffmpeg-kit-android'
                 version project.version ?: "0.0.1"
 
-                // Two artifacts, the `aar` (or `jar`) and the sources
                 from components.release
 
-            pom {
-                name = 'FFmpeg Kit Android'
-                description = 'FFmpeg Kit for Android. Supports Android API Level 24+.'
-                url = 'https://github.com/xch168/ffmpeg-kit'
-                
-                licenses {
-                    license {
-                        name = 'GNU LESSER GENERAL PUBLIC LICENSE, Version 3'
-                        url = 'https://www.gnu.org/licenses/lgpl-3.0.en.html'
-                        distribution = 'repo'
-                    }
-                }
-                
-                developers {
-                    developer {
-                        id = 'xch168'
-                        name = 'xch168'
-                        email = 'kemp.xu@foxmail.com'
-                    }
-                }
-                
-                scm {
-                    connection = 'scm:git:https://github.com/xch168/ffmpeg-kit.git'
-                    developerConnection = 'scm:git:https://github.com/xch168/ffmpeg-kit.git'
+                pom {
+                    name = 'FFmpeg Kit Android'
+                    description = 'FFmpeg Kit for Android. Supports Android API Level 24+.'
                     url = 'https://github.com/xch168/ffmpeg-kit'
+                    
+                    licenses {
+                        license {
+                            name = 'GNU LESSER GENERAL PUBLIC LICENSE, Version 3'
+                            url = 'https://www.gnu.org/licenses/lgpl-3.0.en.html'
+                            distribution = 'repo'
+                        }
+                    }
+                    
+                    developers {
+                        developer {
+                            id = 'xch168'
+                            name = 'xch168'
+                            email = 'kemp.xu@foxmail.com'
+                        }
+                    }
+                    
+                    scm {
+                        connection = 'scm:git:https://github.com/xch168/ffmpeg-kit.git'
+                        developerConnection = 'scm:git:https://github.com/xch168/ffmpeg-kit.git'
+                        url = 'https://github.com/xch168/ffmpeg-kit'
+                    }
                 }
             }
         }
-    }
-    
-    repositories {
-        maven {
-            name = "sonatype"
-            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
-            
-            credentials {
-                username System.getenv("MAVEN_CENTRAL_USERNAME") ?: project.findProperty("mavenCentralUsername")
-                password System.getenv("MAVEN_CENTRAL_PASSWORD") ?: project.findProperty("mavenCentralPassword")
+        
+        repositories {
+            maven {
+                name = "sonatype"
+                def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                
+                credentials {
+                    username System.getenv("MAVEN_CENTRAL_USERNAME") ?: project.findProperty("mavenCentralUsername")
+                    password System.getenv("MAVEN_CENTRAL_PASSWORD") ?: project.findProperty("mavenCentralPassword")
+                }
             }
         }
     }
