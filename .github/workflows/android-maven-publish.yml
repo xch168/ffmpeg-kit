@@ -131,6 +131,9 @@ jobs:
         run: |
           echo "Available publish tasks:"
           ./gradlew tasks --group=publishing
+          echo ""
+          echo "All tasks containing 'publish':"
+          ./gradlew tasks --all | grep -i publish || echo "No publish tasks found"
           
       - name: Publish to Maven Central
         if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_maven == 'true')
@@ -142,17 +145,8 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           echo "Publishing version $VERSION to Maven Central..."
-          # 尝试不同的发布命令
-          echo "Trying library project specific publish task..."
-          cd ffmpeg-kit-android-lib
-          ../gradlew publishReleasePublicationToMavenCentralRepository || {
-            echo "Failed with library project, trying from root..."
-            cd ..
-            ./gradlew :ffmpeg-kit-android-lib:publishReleasePublicationToMavenCentralRepository || {
-              echo "Failed with specific task, trying publish all..."
-              ./gradlew publish
-            }
-          }
+          # 使用正确的任务名称
+          ./gradlew :ffmpeg-kit-android-lib:publishReleasePublicationToSonatypeRepository
           
       - name: Create GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')

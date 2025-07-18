@@ -116,19 +116,18 @@ dependencies {
     testImplementation 'org.json:json:20230618'
 }
 
-publishing {
-    publications {
-        release(MavenPublication) {
-            // The coordinates of the library, being set from variables that
-            // we'll set up later
-            groupId 'io.github.xch168'
-            artifactId 'ffmpeg-kit-android'
-            version project.version ?: "0.0.1"
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                // The coordinates of the library, being set from variables that
+                // we'll set up later
+                groupId 'io.github.xch168'
+                artifactId 'ffmpeg-kit-android'
+                version project.version ?: "0.0.1"
 
-            // Two artifacts, the `aar` (or `jar`) and the sources
-            afterEvaluate {
+                // Two artifacts, the `aar` (or `jar`) and the sources
                 from components.release
-            }
 
             pom {
                 name = 'FFmpeg Kit Android'
@@ -162,7 +161,7 @@ publishing {
     
     repositories {
         maven {
-            name = "MavenCentral"
+            name = "sonatype"
             def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
             def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
@@ -173,16 +172,16 @@ publishing {
             }
         }
     }
-}
 
-signing {
-    required { gradle.taskGraph.hasTask("publish") }
-    
-    def signingKey = System.getenv("SIGNING_KEY") ?: project.findProperty("signingKey")
-    def signingPassword = System.getenv("SIGNING_PASSWORD") ?: project.findProperty("signingPassword")
-    
-    if (signingKey && signingPassword) {
-        useInMemoryPgpKeys(signingKey, signingPassword)
-        sign publishing.publications.release
+    signing {
+        required { gradle.taskGraph.hasTask("publish") }
+        
+        def signingKey = System.getenv("SIGNING_KEY") ?: project.findProperty("signingKey")
+        def signingPassword = System.getenv("SIGNING_PASSWORD") ?: project.findProperty("signingPassword")
+        
+        if (signingKey && signingPassword) {
+            useInMemoryPgpKeys(signingKey, signingPassword)
+            sign publishing.publications.release
+        }
     }
 }
