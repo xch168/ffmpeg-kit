@@ -33,7 +33,7 @@ echo ""
 
 # 运行 Gradle 测试任务
 echo "4. 运行 Gradle 测试任务:"
-./gradlew testPublishConfig || echo "   测试任务执行失败"
+./gradlew :ffmpeg-kit-android-lib:testPublishConfig || echo "   测试任务执行失败"
 echo ""
 
 echo "=== 验证完成 ===" 

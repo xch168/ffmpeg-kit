@@ -153,7 +153,7 @@ jobs:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           echo "Testing publish configuration..."
-          ./gradlew testPublishConfig
+          ./gradlew :ffmpeg-kit-android-lib:testPublishConfig
           
       - name: Publish to Maven Central
         if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_to_maven == 'true')
