@@ -98,6 +98,15 @@ jobs:
         run: |
           ./gradlew clean build
           
+      - name: Show lint report on failure
+        if: failure()
+        working-directory: android
+        run: |
+          if [ -f ffmpeg-kit-android-lib/build/intermediates/lint_intermediate_text_report/debug/lint-results-debug.txt ]; then
+            echo "=== Lint Report ==="
+            cat ffmpeg-kit-android-lib/build/intermediates/lint_intermediate_text_report/debug/lint-results-debug.txt
+          fi
+          
       - name: Run tests
         working-directory: android
         run: |

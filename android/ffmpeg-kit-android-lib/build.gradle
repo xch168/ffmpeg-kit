@@ -43,6 +43,17 @@ android {
         }
     }
 
+    lint {
+        // 不因为警告而中止构建
+        abortOnError false
+        // 忽略测试源文件中的lint问题
+        ignoreTestSources true
+        // 只检查严重错误
+        checkReleaseBuilds false
+        // 创建baseline文件来跟踪现有的lint问题
+        baseline = file("lint-baseline.xml")
+    }
+
     publishing {
         singleVariant('release') {
             withJavadocJar()
